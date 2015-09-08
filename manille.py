@@ -6,6 +6,14 @@ import operator
 import random
 import pdb 
 
+#necessary for debugging in qt        
+def debug_trace():
+    '''Set a tracepoint in the Python debugger that works with Qt'''
+    from PyQt4.QtCore import pyqtRemoveInputHook
+    from pdb import set_trace
+    pyqtRemoveInputHook()
+    set_trace()
+    
 #Some Constants
 kNumPlayers = 4
 kSuites = ["H","S","C","D"]
@@ -123,6 +131,7 @@ class Player:
     #which suite is the longest
     def chose_trump(self):
         nMax=0
+        max_suite=''
         for s in kSuites:
             n=0
             for c in self.cards:
@@ -131,6 +140,7 @@ class Player:
             if n>nMax:
                 max_suite=s
                 nMax=n
+        #set the trump suite on the card class
         Card.trump_suite=max_suite
 
     #Pick a card to open a trick
