@@ -15,8 +15,8 @@ There is a GUI version which makes use of Qt for the GUI and which makes use of 
 ## Running
 To run the text based version:
 
-python manille.py
+> python manille.py
 
 To run the GUI version:
 
-python manilleGUI.py
+> python manilleGUI.py
