@@ -2,7 +2,7 @@
 
 This is a basic implementation of the Manille card game in Python.
 
-This was done primarily as a learning exercise in Python and is therefore not yet fully fleshed out. But given the success I've had I might just do so.
+There is a single human player and 3 automated AI players. The AI is very rudimentary!
 
 Details on the Manille card game and rules can be foune on wikipedia: https://en.wikipedia.org/wiki/Manille
 
