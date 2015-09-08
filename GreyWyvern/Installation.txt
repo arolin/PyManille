@@ -1,0 +1,4 @@
+Place each cardset folder in the directory where
+Pysol's cardsets are located. On Debian systems this is:
+
+/usr/share/games/pysolfc
