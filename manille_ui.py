@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'manille.ui'
 #
-# Created: Tue Sep  8 19:32:47 2015
+# Created: Tue Sep  8 20:41:38 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,7 +32,7 @@ class Ui_manille(object):
         self.centralwidget = QtGui.QWidget(manille)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.layoutWidget = QtGui.QWidget(self.centralwidget)
-        self.layoutWidget.setGeometry(QtCore.QRect(70, 450, 704, 138))
+        self.layoutWidget.setGeometry(QtCore.QRect(70, 440, 704, 138))
         self.layoutWidget.setObjectName(_fromUtf8("layoutWidget"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.layoutWidget)
         self.horizontalLayout.setMargin(0)
@@ -128,22 +128,25 @@ class Ui_manille(object):
         self.next = QtGui.QPushButton(self.layoutWidget1)
         self.next.setObjectName(_fromUtf8("next"))
         self.gridLayout.addWidget(self.next, 1, 2, 1, 1)
-        self.widget = QtGui.QWidget(self.centralwidget)
-        self.widget.setGeometry(QtCore.QRect(80, 0, 92, 167))
-        self.widget.setObjectName(_fromUtf8("widget"))
-        self.verticalLayout = QtGui.QVBoxLayout(self.widget)
+        self.layoutWidget2 = QtGui.QWidget(self.centralwidget)
+        self.layoutWidget2.setGeometry(QtCore.QRect(80, 0, 92, 167))
+        self.layoutWidget2.setObjectName(_fromUtf8("layoutWidget2"))
+        self.verticalLayout = QtGui.QVBoxLayout(self.layoutWidget2)
         self.verticalLayout.setMargin(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.trump_label = QtGui.QLabel(self.widget)
+        self.trump_label = QtGui.QLabel(self.layoutWidget2)
         self.trump_label.setObjectName(_fromUtf8("trump_label"))
         self.verticalLayout.addWidget(self.trump_label)
-        self.trump_disp = QtGui.QLabel(self.widget)
+        self.trump_disp = QtGui.QLabel(self.layoutWidget2)
         self.trump_disp.setMinimumSize(QtCore.QSize(90, 140))
         self.trump_disp.setText(_fromUtf8(""))
         self.trump_disp.setPixmap(QtGui.QPixmap(_fromUtf8("GreyWyvern/cardset/bottom02.gif")))
         self.trump_disp.setObjectName(_fromUtf8("trump_disp"))
         self.verticalLayout.addWidget(self.trump_disp)
         manille.setCentralWidget(self.centralwidget)
+        self.statusBar = QtGui.QStatusBar(manille)
+        self.statusBar.setObjectName(_fromUtf8("statusBar"))
+        manille.setStatusBar(self.statusBar)
 
         self.retranslateUi(manille)
         QtCore.QMetaObject.connectSlotsByName(manille)

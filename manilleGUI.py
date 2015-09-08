@@ -2,6 +2,7 @@ import sys
 from PyQt4 import QtCore, QtGui
 from manille_ui import *
 from manille import *
+import time
 import threading
 
 #qt string stuff
@@ -26,10 +27,23 @@ card_clicked_event = threading.Event()
 #Derive form the Player class to handle play through the GUI
 class GUIPlayer(Player):
 
+    #Allow the user to select the trump suite if they have the deal
+    def chose_trump(self):
+        GUI.status_disp('Pick the trump suite')
+        #wait for the gui to notify card clicking
+        card_clicked_event.wait()
+        card_clicked_event.clear()
+        while not self.selected_card in range(len(self.cards)):
+            card_clicked_event.wait()
+            card_clicked_event.clear()
+        #set the selected card's suite as the trump suite in the card class
+        Card.trump_suite = self.cards[self.selected_card].suite
+
+    
     #Allow the user to play the opening move to a trick
     def open_trick(self):
         global card_clicked_event
-        global GUI
+        GUI.status_disp('Player 1, please select a leading card.')
         #wait for the gui to notify card clicking
         card_clicked_event.wait()
         card_clicked_event.clear()
@@ -48,14 +62,15 @@ class GUIPlayer(Player):
     #remarkable similar to opening a trick except
     #legal moves are reduced
     def play_card(self,trick):
-        global GUI
         GUI.display_trick(trick)
+        GUI.status_disp("Pick a card.\t\t" + suites[trick[0].suite] + " was lead.")
         legal=self.legal_moves(trick)
         #wait for the gui to notify card clicking
         card_clicked_event.wait()
         card_clicked_event.clear()
         #make sure the user clicked a valid card
         while not self.selected_card in legal:
+            GUI.status_disp("That card can not be played! Pick a legal card.\t\t" + suites[trick[0].suite] + " was lead.")
             card_clicked_event.wait()
             card_clicked_event.clear()
         #pop the card from the hand and return it
@@ -72,6 +87,9 @@ class ManilleGUI(QtGui.QMainWindow):
     trigger_trick_disp = QtCore.pyqtSignal(object)
     trigger_hand_disp = QtCore.pyqtSignal()
     trigger_trump_disp = QtCore.pyqtSignal()
+    trigger_status_disp = QtCore.pyqtSignal(object)
+    hide_next = QtCore.pyqtSignal()
+    show_next = QtCore.pyqtSignal()
 
     #event to wait on to wait for user to click next at end of trick
     next_hand_event = threading.Event()
@@ -83,6 +101,13 @@ class ManilleGUI(QtGui.QMainWindow):
     def trump_disp(self):
         trump_img = "GreyWyvern/cardset/" + Card.trump_suite +".gif"
         self.ui.trump_disp.setPixmap(QtGui.QPixmap(_fromUtf8(trump_img)))
+
+    def play_game(self):
+        self.hide_next.emit()
+        while 1:
+            self.deal()
+            self.display_hand()
+            self.play_hand()
         
     #play through a hand of manille, deal and run through all the tricks
     def play_hand(self):
@@ -92,8 +117,9 @@ class ManilleGUI(QtGui.QMainWindow):
         self.trigger_trump_disp.emit()
         #set the dealer to be ther first player and increment the
         #dealer for the next hand
-        self.lead_player = self.dealer
+        self.lead_player = (self.dealer + 1)%kNumPlayers
         self.dealer += 1
+        self.dealer %=kNumPlayers
         #while there are cards left in the hand play each trick
         while(len(self.players[0].cards)>0):
             #clear the display of the current trick
@@ -103,10 +129,31 @@ class ManilleGUI(QtGui.QMainWindow):
             #display the finished trick and wait for the user to
             #acknowledge
             self.trigger_trick_disp.emit(trick)
+            #announce the results of the trick
+            points = sum([c.score for c in trick])
+            points = 'There were ' + str(points) + ' points in the trick.'
+            if (winner==0):
+                self.status_disp( 'You won the trick! ' + points)
+            elif (winner==2):
+                self.status_disp( 'Your partner, Player 3, won the trick! '+ points)
+            else:
+                self.status_disp( 'Your opponent, Player ' + str(winner+1) +', won the trick. '+ points)
+            #prompt the user to start the next trick
+            self.show_next.emit()
             self.next_hand_event.wait()
             self.next_hand_event.clear()
+            self.hide_next.emit()
             #set the winner of the trick to start the next trick
             self.lead_player = winner
+        #Report the scores for the hand
+        scores = [p.score_tricks() for p in self.players]
+        score_str=''
+        for i,score in enumerate(scores):
+            score_str += 'Player ' + str(i+1) +':' + str(score) + '/'
+        score_str +='\tYour team :' + str(self.players[0].score+self.players[2].score)
+        score_str +='\tTheir team :' + str(self.players[1].score+self.players[3].score)
+        self.status_disp(score_str)
+
 
     #This is the relay from each of the clicked cards to set the card
     #that was clicked and notify the human player object
@@ -162,7 +209,10 @@ class ManilleGUI(QtGui.QMainWindow):
         self.trigger_trick_disp.connect(self.display_trick_)
         self.trigger_hand_disp.connect(self.display_hand_)
         self.trigger_trump_disp.connect(self.trump_disp)
-
+        self.trigger_status_disp.connect(self.status_disp_)
+        self.hide_next.connect(self.ui.next.hide)
+        self.show_next.connect(self.ui.next.show)
+        
 
             
     def __init__(self, parent=None):
@@ -172,19 +222,20 @@ class ManilleGUI(QtGui.QMainWindow):
         #Create the Game elements
         self.deck = []
         self.players = []
+        #create human player 1
+        self.human=GUIPlayer()
+        self.players.append(self.human)
         #create 3 AI players
         for i in range(3):
             self.players.append(Player())
-        #create human 4th player
-        self.human=GUIPlayer()
-        self.players.append(self.human)
         #set the human as the first dealer
-        self.dealer=3
-        self.lead_player =self.dealer
-        self.deal()
-        self.display_hand_()
+        self.dealer=1
+        self.lead_player = self.dealer + 1
+       
+
+    def start_game(self):
         #create a thread to run the game
-        self.game_thread = threading.Thread(target=self.play_hand)
+        self.game_thread = threading.Thread(target=self.play_game)
         self.game_thread.start()
         
     #deal the cards to each player
@@ -248,10 +299,18 @@ class ManilleGUI(QtGui.QMainWindow):
         self.players[winner].take_trick(trick)
         return (trick,winner)
 
+    def status_disp(self,msg):
+        self.trigger_status_disp.emit(msg)
+    
+    def status_disp_(self, msg):
+        self.ui.statusBar.showMessage(msg)
+    
 
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     GUI = ManilleGUI()
     GUI.show()
+    GUI.start_game()
     sys.exit(app.exec_())
+    GUI.game_thread.join()
